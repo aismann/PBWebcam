@@ -64,6 +64,7 @@ EndStructure
 
 Structure _PBWebcamGlobalsStruct
   FullyInitializedSDL.i
+  SDL_3_4_0.i
   ;
   List Webcam._PBWebcamStruct()
   Count.l
@@ -417,11 +418,21 @@ Procedure.i GetWebcamFrame()
       If (_PBWebcam\Converted)
         
         ; Once in RGB surface format, can use SDL's FlipSurface function
-        If (_PBWebcam\FlipMode & #_PBWebcam_FlipX)
-          SDL_FlipSurface(_PBWebcam\Converted, #SDL_FLIP_HORIZONTAL)
-        EndIf
         If ((_PBWebcam\FlipMode & #_PBWebcam_FlipY) XOr (_PBWebcam\YFlipped))
-          SDL_FlipSurface(_PBWebcam\Converted, #SDL_FLIP_VERTICAL)
+          If (_PBWebcam\FlipMode & #_PBWebcam_FlipX)
+            If (_PBWebcam\SDL_3_4_0) ; SDL 3.4.0+ will do horizontal and vertical flip in one function call
+              SDL_FlipSurface(_PBWebcam\Converted, #SDL_FLIP_HORIZONTAL_AND_VERTICAL)
+            Else
+              SDL_FlipSurface(_PBWebcam\Converted, #SDL_FLIP_HORIZONTAL)
+              SDL_FlipSurface(_PBWebcam\Converted, #SDL_FLIP_VERTICAL)
+            EndIf
+          Else
+            SDL_FlipSurface(_PBWebcam\Converted, #SDL_FLIP_VERTICAL) ; Y only
+          EndIf
+        Else
+          If (_PBWebcam\FlipMode & #_PBWebcam_FlipX)
+            SDL_FlipSurface(_PBWebcam\Converted, #SDL_FLIP_HORIZONTAL) ; X only
+          EndIf
         EndIf
         
         ; Cannot save this for "just in time" at DrawWebcamImage call, because we'll already be within a Start/StopDrawing block at that point!
@@ -514,6 +525,11 @@ Procedure.i ExamineWebcams()
   EndIf
   
   If (SDL_Init(#SDL_INIT_CAMERA))
+    If (SDL_GetVersion() >= SDL_VERSIONNUM(3, 4, 0))
+      _PBWebcam\SDL_3_4_0 = #True
+    Else
+      _PBWebcam\SDL_3_4_0 = #False
+    EndIf
     
     Protected *camera_ids.SDLx_LongArray = SDL_GetCameras(@_PBWebcam\Count)
     _PBWebcam\Driver = SDLx_GetCurrentCameraDriverString()

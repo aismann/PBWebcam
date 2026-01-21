@@ -11,7 +11,12 @@ XIncludeFile "PBWebcam.pbi"
 DisableExplicit
 N = ExamineWebcams()
 If (N <= 0)
-  MessageRequester(#PB_Compiler_Filename, "Could not examine webcams, or none found!", #PB_MessageRequester_Error)
+  If (SDLx_LibraryLoaded())
+    MessageRequester(#PB_Compiler_Filename, "Could not examine webcams, or none found!", #PB_MessageRequester_Error)
+  Else
+    MessageRequester(#PB_Compiler_Filename, "Could not initialize SDL3! (" + SDlx_LibraryPath() + ")", #PB_MessageRequester_Error)
+  EndIf
+  FinishWebcams()
   End
 EndIf
 

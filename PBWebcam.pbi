@@ -505,7 +505,7 @@ Procedure FinishWebcams()
     SDL_Quit()
   Else
     If (SDLx_LibraryLoaded())
-      SDL_QuitSubsystem(#SDL_INIT_VIDEO)
+      SDL_QuitSubsystem(#SDL_INIT_CAMERA)
     EndIf
   EndIf
 EndProcedure
